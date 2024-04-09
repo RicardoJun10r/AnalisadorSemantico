@@ -17,6 +17,12 @@ except FileNotFoundError:
 except Exception as e:
     print(f"ERRO: '{e}'")
 
+environment = {
+    'classes': {},
+    'individuals': {},
+    'relations': {}
+}
+
 # Abaixo estão as palavras reservadas da linguagem e logo em seguida todos os tokens
 reserved = {
     'some': 'SOME',
@@ -174,6 +180,11 @@ def p_descricao_classes(p):
     descricao_classes : CLASS COLON ID subclasso_classes descricao_classes
                       | CLASS COLON ID
     '''
+    class_name = p[3]
+    if class_name in environment['classes']:
+        print(f"Erro semântico: Classe '{class_name}' já definida.")
+    else:
+        environment['classes'][class_name] = {'equivalentTo': [], 'subClassOf': [], 'disjointWith': [], 'properties': []}
 
 def p_subclasso_classes(p):
     '''
@@ -187,6 +198,24 @@ def p_subclasso_classes(p):
                       | EQUIVALENTO COLON expressao_classes
                       | empty
     '''
+    if 'SUBCLASSOF' in p[1]:
+        superclass = p[3]
+        if superclass not in environment['classes']:
+            print(f"Erro semântico: Superclasse '{superclass}' não definida.")
+        else:
+            environment['classes'][p[-1]]['subClassOf'].append(superclass)
+    elif 'DISJOINTCLASSES' in p[1]:
+        disjoint_class = p[3]
+        if disjoint_class not in environment['classes']:
+            print(f"Erro semântico: Classe disjunta '{disjoint_class}' não definida.")
+        else:
+            environment['classes'][p[-1]]['disjointWith'].append(disjoint_class)
+    elif 'EQUIVALENTO' in p[1]:
+        equivalent_class = p[3]
+        if equivalent_class not in environment['classes']:
+            print(f"Erro semântico: Classe equivalente '{equivalent_class}' não definida.")
+        else:
+            environment['classes'][p[-1]]['equivalentTo'].append(equivalent_class)
 
 def p_properties(p):
     '''
@@ -240,11 +269,11 @@ parser.parse(file)
 
 # Analisador Semantico
 
-while True:
-    try:
-        s = input('> ')
-    except EOFError:
-        break
-    if not s: continue
-    result = parser.parse(s)
-    print(result)
+# while True:
+#     try:
+#         s = input('> ')
+#     except EOFError:
+#         break
+#     if not s: continue
+#     result = parser.parse(s)
+#     print(result)
