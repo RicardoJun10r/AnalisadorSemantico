@@ -1,4 +1,4 @@
-# Analisador Semantico
+# Analisador Semântico
 
 Objetivo:  Estender o analisador sintático construído para a verificação parcial da linguagem OWL Manchester Syntax com três tipos de técnicas de análise semântica.
 
