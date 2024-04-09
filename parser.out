@@ -1,0 +1,726 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Unused terminals:
+
+    ALL
+    AT
+    CARDINALITY
+    DATA_TYPE
+    EQ
+    EXACTLY
+    GT
+    HAS
+    IS
+    LBRACE
+    LBRACKET
+    LT
+    MAX
+    MIN
+    NOT
+    OF
+    ONLY
+    OR
+    PROPERTY
+    RBRACE
+    RBRACKET
+    RESERVED
+    THAT
+    VALUE
+
+Grammar
+
+Rule 0     S' -> ontologia
+Rule 1     ontologia -> descricao_classes descricao_individuals
+Rule 2     descricao_classes -> CLASS COLON ID subclasso_classes descricao_classes
+Rule 3     descricao_classes -> CLASS COLON ID
+Rule 4     subclasso_classes -> SUBCLASSOF COLON expressao_classes propriedades descricao_classes
+Rule 5     subclasso_classes -> SUBCLASSOF COLON expressao_classes propriedades
+Rule 6     subclasso_classes -> SUBCLASSOF COLON expressao_classes descricao_classes
+Rule 7     subclasso_classes -> SUBCLASSOF COLON expressao_classes
+Rule 8     subclasso_classes -> DISJOINTCLASSES COLON expressao_classes descricao_classes
+Rule 9     subclasso_classes -> DISJOINTCLASSES COLON expressao_classes
+Rule 10    subclasso_classes -> EQUIVALENTO COLON expressao_classes descricao_classes
+Rule 11    subclasso_classes -> EQUIVALENTO COLON expressao_classes
+Rule 12    subclasso_classes -> empty
+Rule 13    propriedades -> expressao_classes descricao_classes propriedades
+Rule 14    propriedades -> expressao_classes propriedades
+Rule 15    propriedades -> empty
+Rule 16    descricao_individuals -> INDIVIDUALS COLON ID COMMA ID descricao_individuals
+Rule 17    descricao_individuals -> INDIVIDUALS COLON ID
+Rule 18    descricao_individuals -> empty
+Rule 19    expressao_classes -> ID
+Rule 20    expressao_classes -> ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+Rule 21    expressao_classes -> ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+Rule 22    expressao_classes -> ID AND LPAREN ID SOME ID RPAREN
+Rule 23    expressao_classes -> ID AND LPAREN ID COMMA ID SOME ID RPAREN
+Rule 24    empty -> <empty>
+
+Terminals, with rules where they appear
+
+ALL                  : 
+AND                  : 20 21 22 23
+AT                   : 
+CARDINALITY          : 
+CLASS                : 2 3
+COLON                : 2 3 4 5 6 7 8 9 10 11 16 17
+COMMA                : 16 20 21 23
+DATA_TYPE            : 
+DISJOINTCLASSES      : 8 9
+EQ                   : 
+EQUIVALENTO          : 10 11
+EXACTLY              : 
+GT                   : 
+HAS                  : 
+ID                   : 2 3 16 16 17 19 20 21 21 21 22 22 22 23 23 23 23
+INDIVIDUALS          : 16 17
+IS                   : 
+LBRACE               : 
+LBRACKET             : 
+LPAREN               : 20 21 22 23
+LT                   : 
+MAX                  : 
+MIN                  : 
+NOT                  : 
+OF                   : 
+ONLY                 : 
+OR                   : 
+PROPERTY             : 
+RBRACE               : 
+RBRACKET             : 
+RESERVED             : 
+RPAREN               : 20 21 22 23
+SOME                 : 21 22 23
+SUBCLASSOF           : 4 5 6 7
+THAT                 : 
+VALUE                : 
+error                : 
+
+Nonterminals, with rules where they appear
+
+descricao_classes    : 1 2 4 6 8 10 13
+descricao_individuals : 1 16
+empty                : 12 15 18
+expressao_classes    : 4 5 6 7 8 9 10 11 13 14 20 20 21
+ontologia            : 0
+propriedades         : 4 5 13 14
+subclasso_classes    : 2
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . ontologia
+    (1) ontologia -> . descricao_classes descricao_individuals
+    (2) descricao_classes -> . CLASS COLON ID subclasso_classes descricao_classes
+    (3) descricao_classes -> . CLASS COLON ID
+
+    CLASS           shift and go to state 3
+
+    ontologia                      shift and go to state 1
+    descricao_classes              shift and go to state 2
+
+state 1
+
+    (0) S' -> ontologia .
+
+
+
+state 2
+
+    (1) ontologia -> descricao_classes . descricao_individuals
+    (16) descricao_individuals -> . INDIVIDUALS COLON ID COMMA ID descricao_individuals
+    (17) descricao_individuals -> . INDIVIDUALS COLON ID
+    (18) descricao_individuals -> . empty
+    (24) empty -> .
+
+    INDIVIDUALS     shift and go to state 5
+    $end            reduce using rule 24 (empty -> .)
+
+    descricao_individuals          shift and go to state 4
+    empty                          shift and go to state 6
+
+state 3
+
+    (2) descricao_classes -> CLASS . COLON ID subclasso_classes descricao_classes
+    (3) descricao_classes -> CLASS . COLON ID
+
+    COLON           shift and go to state 7
+
+
+state 4
+
+    (1) ontologia -> descricao_classes descricao_individuals .
+
+    $end            reduce using rule 1 (ontologia -> descricao_classes descricao_individuals .)
+
+
+state 5
+
+    (16) descricao_individuals -> INDIVIDUALS . COLON ID COMMA ID descricao_individuals
+    (17) descricao_individuals -> INDIVIDUALS . COLON ID
+
+    COLON           shift and go to state 8
+
+
+state 6
+
+    (18) descricao_individuals -> empty .
+
+    $end            reduce using rule 18 (descricao_individuals -> empty .)
+
+
+state 7
+
+    (2) descricao_classes -> CLASS COLON . ID subclasso_classes descricao_classes
+    (3) descricao_classes -> CLASS COLON . ID
+
+    ID              shift and go to state 9
+
+
+state 8
+
+    (16) descricao_individuals -> INDIVIDUALS COLON . ID COMMA ID descricao_individuals
+    (17) descricao_individuals -> INDIVIDUALS COLON . ID
+
+    ID              shift and go to state 10
+
+
+state 9
+
+    (2) descricao_classes -> CLASS COLON ID . subclasso_classes descricao_classes
+    (3) descricao_classes -> CLASS COLON ID .
+    (4) subclasso_classes -> . SUBCLASSOF COLON expressao_classes propriedades descricao_classes
+    (5) subclasso_classes -> . SUBCLASSOF COLON expressao_classes propriedades
+    (6) subclasso_classes -> . SUBCLASSOF COLON expressao_classes descricao_classes
+    (7) subclasso_classes -> . SUBCLASSOF COLON expressao_classes
+    (8) subclasso_classes -> . DISJOINTCLASSES COLON expressao_classes descricao_classes
+    (9) subclasso_classes -> . DISJOINTCLASSES COLON expressao_classes
+    (10) subclasso_classes -> . EQUIVALENTO COLON expressao_classes descricao_classes
+    (11) subclasso_classes -> . EQUIVALENTO COLON expressao_classes
+    (12) subclasso_classes -> . empty
+    (24) empty -> .
+
+  ! reduce/reduce conflict for CLASS resolved using rule 3 (descricao_classes -> CLASS COLON ID .)
+    INDIVIDUALS     reduce using rule 3 (descricao_classes -> CLASS COLON ID .)
+    $end            reduce using rule 3 (descricao_classes -> CLASS COLON ID .)
+    CLASS           reduce using rule 3 (descricao_classes -> CLASS COLON ID .)
+    ID              reduce using rule 3 (descricao_classes -> CLASS COLON ID .)
+    SUBCLASSOF      shift and go to state 12
+    DISJOINTCLASSES shift and go to state 13
+    EQUIVALENTO     shift and go to state 14
+
+  ! CLASS           [ reduce using rule 24 (empty -> .) ]
+
+    subclasso_classes              shift and go to state 11
+    empty                          shift and go to state 15
+
+state 10
+
+    (16) descricao_individuals -> INDIVIDUALS COLON ID . COMMA ID descricao_individuals
+    (17) descricao_individuals -> INDIVIDUALS COLON ID .
+
+    COMMA           shift and go to state 16
+    $end            reduce using rule 17 (descricao_individuals -> INDIVIDUALS COLON ID .)
+
+
+state 11
+
+    (2) descricao_classes -> CLASS COLON ID subclasso_classes . descricao_classes
+    (2) descricao_classes -> . CLASS COLON ID subclasso_classes descricao_classes
+    (3) descricao_classes -> . CLASS COLON ID
+
+    CLASS           shift and go to state 3
+
+    descricao_classes              shift and go to state 17
+
+state 12
+
+    (4) subclasso_classes -> SUBCLASSOF . COLON expressao_classes propriedades descricao_classes
+    (5) subclasso_classes -> SUBCLASSOF . COLON expressao_classes propriedades
+    (6) subclasso_classes -> SUBCLASSOF . COLON expressao_classes descricao_classes
+    (7) subclasso_classes -> SUBCLASSOF . COLON expressao_classes
+
+    COLON           shift and go to state 18
+
+
+state 13
+
+    (8) subclasso_classes -> DISJOINTCLASSES . COLON expressao_classes descricao_classes
+    (9) subclasso_classes -> DISJOINTCLASSES . COLON expressao_classes
+
+    COLON           shift and go to state 19
+
+
+state 14
+
+    (10) subclasso_classes -> EQUIVALENTO . COLON expressao_classes descricao_classes
+    (11) subclasso_classes -> EQUIVALENTO . COLON expressao_classes
+
+    COLON           shift and go to state 20
+
+
+state 15
+
+    (12) subclasso_classes -> empty .
+
+    CLASS           reduce using rule 12 (subclasso_classes -> empty .)
+
+
+state 16
+
+    (16) descricao_individuals -> INDIVIDUALS COLON ID COMMA . ID descricao_individuals
+
+    ID              shift and go to state 21
+
+
+state 17
+
+    (2) descricao_classes -> CLASS COLON ID subclasso_classes descricao_classes .
+
+    INDIVIDUALS     reduce using rule 2 (descricao_classes -> CLASS COLON ID subclasso_classes descricao_classes .)
+    $end            reduce using rule 2 (descricao_classes -> CLASS COLON ID subclasso_classes descricao_classes .)
+    CLASS           reduce using rule 2 (descricao_classes -> CLASS COLON ID subclasso_classes descricao_classes .)
+    ID              reduce using rule 2 (descricao_classes -> CLASS COLON ID subclasso_classes descricao_classes .)
+
+
+state 18
+
+    (4) subclasso_classes -> SUBCLASSOF COLON . expressao_classes propriedades descricao_classes
+    (5) subclasso_classes -> SUBCLASSOF COLON . expressao_classes propriedades
+    (6) subclasso_classes -> SUBCLASSOF COLON . expressao_classes descricao_classes
+    (7) subclasso_classes -> SUBCLASSOF COLON . expressao_classes
+    (19) expressao_classes -> . ID
+    (20) expressao_classes -> . ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> . ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> . ID AND LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> . ID AND LPAREN ID COMMA ID SOME ID RPAREN
+
+    ID              shift and go to state 23
+
+    expressao_classes              shift and go to state 22
+
+state 19
+
+    (8) subclasso_classes -> DISJOINTCLASSES COLON . expressao_classes descricao_classes
+    (9) subclasso_classes -> DISJOINTCLASSES COLON . expressao_classes
+    (19) expressao_classes -> . ID
+    (20) expressao_classes -> . ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> . ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> . ID AND LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> . ID AND LPAREN ID COMMA ID SOME ID RPAREN
+
+    ID              shift and go to state 23
+
+    expressao_classes              shift and go to state 24
+
+state 20
+
+    (10) subclasso_classes -> EQUIVALENTO COLON . expressao_classes descricao_classes
+    (11) subclasso_classes -> EQUIVALENTO COLON . expressao_classes
+    (19) expressao_classes -> . ID
+    (20) expressao_classes -> . ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> . ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> . ID AND LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> . ID AND LPAREN ID COMMA ID SOME ID RPAREN
+
+    ID              shift and go to state 23
+
+    expressao_classes              shift and go to state 25
+
+state 21
+
+    (16) descricao_individuals -> INDIVIDUALS COLON ID COMMA ID . descricao_individuals
+    (16) descricao_individuals -> . INDIVIDUALS COLON ID COMMA ID descricao_individuals
+    (17) descricao_individuals -> . INDIVIDUALS COLON ID
+    (18) descricao_individuals -> . empty
+    (24) empty -> .
+
+    INDIVIDUALS     shift and go to state 5
+    $end            reduce using rule 24 (empty -> .)
+
+    descricao_individuals          shift and go to state 26
+    empty                          shift and go to state 6
+
+state 22
+
+    (4) subclasso_classes -> SUBCLASSOF COLON expressao_classes . propriedades descricao_classes
+    (5) subclasso_classes -> SUBCLASSOF COLON expressao_classes . propriedades
+    (6) subclasso_classes -> SUBCLASSOF COLON expressao_classes . descricao_classes
+    (7) subclasso_classes -> SUBCLASSOF COLON expressao_classes .
+    (13) propriedades -> . expressao_classes descricao_classes propriedades
+    (14) propriedades -> . expressao_classes propriedades
+    (15) propriedades -> . empty
+    (2) descricao_classes -> . CLASS COLON ID subclasso_classes descricao_classes
+    (3) descricao_classes -> . CLASS COLON ID
+    (19) expressao_classes -> . ID
+    (20) expressao_classes -> . ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> . ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> . ID AND LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> . ID AND LPAREN ID COMMA ID SOME ID RPAREN
+    (24) empty -> .
+
+  ! shift/reduce conflict for CLASS resolved as shift
+  ! shift/reduce conflict for CLASS resolved as shift
+    CLASS           shift and go to state 3
+    ID              shift and go to state 23
+
+  ! CLASS           [ reduce using rule 7 (subclasso_classes -> SUBCLASSOF COLON expressao_classes .) ]
+  ! CLASS           [ reduce using rule 24 (empty -> .) ]
+
+    expressao_classes              shift and go to state 27
+    propriedades                   shift and go to state 28
+    descricao_classes              shift and go to state 29
+    empty                          shift and go to state 30
+
+state 23
+
+    (19) expressao_classes -> ID .
+    (20) expressao_classes -> ID . AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> ID . AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> ID . AND LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> ID . AND LPAREN ID COMMA ID SOME ID RPAREN
+
+    CLASS           reduce using rule 19 (expressao_classes -> ID .)
+    ID              reduce using rule 19 (expressao_classes -> ID .)
+    AND             shift and go to state 31
+
+
+state 24
+
+    (8) subclasso_classes -> DISJOINTCLASSES COLON expressao_classes . descricao_classes
+    (9) subclasso_classes -> DISJOINTCLASSES COLON expressao_classes .
+    (2) descricao_classes -> . CLASS COLON ID subclasso_classes descricao_classes
+    (3) descricao_classes -> . CLASS COLON ID
+
+  ! shift/reduce conflict for CLASS resolved as shift
+    CLASS           shift and go to state 3
+
+  ! CLASS           [ reduce using rule 9 (subclasso_classes -> DISJOINTCLASSES COLON expressao_classes .) ]
+
+    descricao_classes              shift and go to state 32
+
+state 25
+
+    (10) subclasso_classes -> EQUIVALENTO COLON expressao_classes . descricao_classes
+    (11) subclasso_classes -> EQUIVALENTO COLON expressao_classes .
+    (2) descricao_classes -> . CLASS COLON ID subclasso_classes descricao_classes
+    (3) descricao_classes -> . CLASS COLON ID
+
+  ! shift/reduce conflict for CLASS resolved as shift
+    CLASS           shift and go to state 3
+
+  ! CLASS           [ reduce using rule 11 (subclasso_classes -> EQUIVALENTO COLON expressao_classes .) ]
+
+    descricao_classes              shift and go to state 33
+
+state 26
+
+    (16) descricao_individuals -> INDIVIDUALS COLON ID COMMA ID descricao_individuals .
+
+    $end            reduce using rule 16 (descricao_individuals -> INDIVIDUALS COLON ID COMMA ID descricao_individuals .)
+
+
+state 27
+
+    (13) propriedades -> expressao_classes . descricao_classes propriedades
+    (14) propriedades -> expressao_classes . propriedades
+    (2) descricao_classes -> . CLASS COLON ID subclasso_classes descricao_classes
+    (3) descricao_classes -> . CLASS COLON ID
+    (13) propriedades -> . expressao_classes descricao_classes propriedades
+    (14) propriedades -> . expressao_classes propriedades
+    (15) propriedades -> . empty
+    (19) expressao_classes -> . ID
+    (20) expressao_classes -> . ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> . ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> . ID AND LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> . ID AND LPAREN ID COMMA ID SOME ID RPAREN
+    (24) empty -> .
+
+  ! shift/reduce conflict for CLASS resolved as shift
+    CLASS           shift and go to state 3
+    ID              shift and go to state 23
+
+  ! CLASS           [ reduce using rule 24 (empty -> .) ]
+
+    expressao_classes              shift and go to state 27
+    descricao_classes              shift and go to state 34
+    propriedades                   shift and go to state 35
+    empty                          shift and go to state 30
+
+state 28
+
+    (4) subclasso_classes -> SUBCLASSOF COLON expressao_classes propriedades . descricao_classes
+    (5) subclasso_classes -> SUBCLASSOF COLON expressao_classes propriedades .
+    (2) descricao_classes -> . CLASS COLON ID subclasso_classes descricao_classes
+    (3) descricao_classes -> . CLASS COLON ID
+
+  ! shift/reduce conflict for CLASS resolved as shift
+    CLASS           shift and go to state 3
+
+  ! CLASS           [ reduce using rule 5 (subclasso_classes -> SUBCLASSOF COLON expressao_classes propriedades .) ]
+
+    descricao_classes              shift and go to state 36
+
+state 29
+
+    (6) subclasso_classes -> SUBCLASSOF COLON expressao_classes descricao_classes .
+
+    CLASS           reduce using rule 6 (subclasso_classes -> SUBCLASSOF COLON expressao_classes descricao_classes .)
+
+
+state 30
+
+    (15) propriedades -> empty .
+
+    CLASS           reduce using rule 15 (propriedades -> empty .)
+
+
+state 31
+
+    (20) expressao_classes -> ID AND . LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> ID AND . LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> ID AND . LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> ID AND . LPAREN ID COMMA ID SOME ID RPAREN
+
+    LPAREN          shift and go to state 37
+
+
+state 32
+
+    (8) subclasso_classes -> DISJOINTCLASSES COLON expressao_classes descricao_classes .
+
+    CLASS           reduce using rule 8 (subclasso_classes -> DISJOINTCLASSES COLON expressao_classes descricao_classes .)
+
+
+state 33
+
+    (10) subclasso_classes -> EQUIVALENTO COLON expressao_classes descricao_classes .
+
+    CLASS           reduce using rule 10 (subclasso_classes -> EQUIVALENTO COLON expressao_classes descricao_classes .)
+
+
+state 34
+
+    (13) propriedades -> expressao_classes descricao_classes . propriedades
+    (13) propriedades -> . expressao_classes descricao_classes propriedades
+    (14) propriedades -> . expressao_classes propriedades
+    (15) propriedades -> . empty
+    (19) expressao_classes -> . ID
+    (20) expressao_classes -> . ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> . ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> . ID AND LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> . ID AND LPAREN ID COMMA ID SOME ID RPAREN
+    (24) empty -> .
+
+    ID              shift and go to state 23
+    CLASS           reduce using rule 24 (empty -> .)
+
+    expressao_classes              shift and go to state 27
+    propriedades                   shift and go to state 38
+    empty                          shift and go to state 30
+
+state 35
+
+    (14) propriedades -> expressao_classes propriedades .
+
+    CLASS           reduce using rule 14 (propriedades -> expressao_classes propriedades .)
+
+
+state 36
+
+    (4) subclasso_classes -> SUBCLASSOF COLON expressao_classes propriedades descricao_classes .
+
+    CLASS           reduce using rule 4 (subclasso_classes -> SUBCLASSOF COLON expressao_classes propriedades descricao_classes .)
+
+
+state 37
+
+    (20) expressao_classes -> ID AND LPAREN . expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> ID AND LPAREN . expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> ID AND LPAREN . ID SOME ID RPAREN
+    (23) expressao_classes -> ID AND LPAREN . ID COMMA ID SOME ID RPAREN
+    (19) expressao_classes -> . ID
+    (20) expressao_classes -> . ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> . ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> . ID AND LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> . ID AND LPAREN ID COMMA ID SOME ID RPAREN
+
+    ID              shift and go to state 39
+
+    expressao_classes              shift and go to state 40
+
+state 38
+
+    (13) propriedades -> expressao_classes descricao_classes propriedades .
+
+    CLASS           reduce using rule 13 (propriedades -> expressao_classes descricao_classes propriedades .)
+
+
+state 39
+
+    (22) expressao_classes -> ID AND LPAREN ID . SOME ID RPAREN
+    (23) expressao_classes -> ID AND LPAREN ID . COMMA ID SOME ID RPAREN
+    (19) expressao_classes -> ID .
+    (20) expressao_classes -> ID . AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> ID . AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> ID . AND LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> ID . AND LPAREN ID COMMA ID SOME ID RPAREN
+
+  ! shift/reduce conflict for COMMA resolved as shift
+    SOME            shift and go to state 41
+    COMMA           shift and go to state 42
+    AND             shift and go to state 31
+
+  ! COMMA           [ reduce using rule 19 (expressao_classes -> ID .) ]
+
+
+state 40
+
+    (20) expressao_classes -> ID AND LPAREN expressao_classes . COMMA expressao_classes RPAREN
+    (21) expressao_classes -> ID AND LPAREN expressao_classes . COMMA ID SOME ID RPAREN
+
+    COMMA           shift and go to state 43
+
+
+state 41
+
+    (22) expressao_classes -> ID AND LPAREN ID SOME . ID RPAREN
+
+    ID              shift and go to state 44
+
+
+state 42
+
+    (23) expressao_classes -> ID AND LPAREN ID COMMA . ID SOME ID RPAREN
+
+    ID              shift and go to state 45
+
+
+state 43
+
+    (20) expressao_classes -> ID AND LPAREN expressao_classes COMMA . expressao_classes RPAREN
+    (21) expressao_classes -> ID AND LPAREN expressao_classes COMMA . ID SOME ID RPAREN
+    (19) expressao_classes -> . ID
+    (20) expressao_classes -> . ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> . ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> . ID AND LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> . ID AND LPAREN ID COMMA ID SOME ID RPAREN
+
+    ID              shift and go to state 46
+
+    expressao_classes              shift and go to state 47
+
+state 44
+
+    (22) expressao_classes -> ID AND LPAREN ID SOME ID . RPAREN
+
+    RPAREN          shift and go to state 48
+
+
+state 45
+
+    (23) expressao_classes -> ID AND LPAREN ID COMMA ID . SOME ID RPAREN
+
+    SOME            shift and go to state 49
+
+
+state 46
+
+    (21) expressao_classes -> ID AND LPAREN expressao_classes COMMA ID . SOME ID RPAREN
+    (19) expressao_classes -> ID .
+    (20) expressao_classes -> ID . AND LPAREN expressao_classes COMMA expressao_classes RPAREN
+    (21) expressao_classes -> ID . AND LPAREN expressao_classes COMMA ID SOME ID RPAREN
+    (22) expressao_classes -> ID . AND LPAREN ID SOME ID RPAREN
+    (23) expressao_classes -> ID . AND LPAREN ID COMMA ID SOME ID RPAREN
+
+    SOME            shift and go to state 50
+    RPAREN          reduce using rule 19 (expressao_classes -> ID .)
+    AND             shift and go to state 31
+
+
+state 47
+
+    (20) expressao_classes -> ID AND LPAREN expressao_classes COMMA expressao_classes . RPAREN
+
+    RPAREN          shift and go to state 51
+
+
+state 48
+
+    (22) expressao_classes -> ID AND LPAREN ID SOME ID RPAREN .
+
+    CLASS           reduce using rule 22 (expressao_classes -> ID AND LPAREN ID SOME ID RPAREN .)
+    ID              reduce using rule 22 (expressao_classes -> ID AND LPAREN ID SOME ID RPAREN .)
+    COMMA           reduce using rule 22 (expressao_classes -> ID AND LPAREN ID SOME ID RPAREN .)
+    RPAREN          reduce using rule 22 (expressao_classes -> ID AND LPAREN ID SOME ID RPAREN .)
+
+
+state 49
+
+    (23) expressao_classes -> ID AND LPAREN ID COMMA ID SOME . ID RPAREN
+
+    ID              shift and go to state 52
+
+
+state 50
+
+    (21) expressao_classes -> ID AND LPAREN expressao_classes COMMA ID SOME . ID RPAREN
+
+    ID              shift and go to state 53
+
+
+state 51
+
+    (20) expressao_classes -> ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN .
+
+    CLASS           reduce using rule 20 (expressao_classes -> ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN .)
+    ID              reduce using rule 20 (expressao_classes -> ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN .)
+    COMMA           reduce using rule 20 (expressao_classes -> ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN .)
+    RPAREN          reduce using rule 20 (expressao_classes -> ID AND LPAREN expressao_classes COMMA expressao_classes RPAREN .)
+
+
+state 52
+
+    (23) expressao_classes -> ID AND LPAREN ID COMMA ID SOME ID . RPAREN
+
+    RPAREN          shift and go to state 54
+
+
+state 53
+
+    (21) expressao_classes -> ID AND LPAREN expressao_classes COMMA ID SOME ID . RPAREN
+
+    RPAREN          shift and go to state 55
+
+
+state 54
+
+    (23) expressao_classes -> ID AND LPAREN ID COMMA ID SOME ID RPAREN .
+
+    CLASS           reduce using rule 23 (expressao_classes -> ID AND LPAREN ID COMMA ID SOME ID RPAREN .)
+    ID              reduce using rule 23 (expressao_classes -> ID AND LPAREN ID COMMA ID SOME ID RPAREN .)
+    COMMA           reduce using rule 23 (expressao_classes -> ID AND LPAREN ID COMMA ID SOME ID RPAREN .)
+    RPAREN          reduce using rule 23 (expressao_classes -> ID AND LPAREN ID COMMA ID SOME ID RPAREN .)
+
+
+state 55
+
+    (21) expressao_classes -> ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN .
+
+    CLASS           reduce using rule 21 (expressao_classes -> ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN .)
+    ID              reduce using rule 21 (expressao_classes -> ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN .)
+    COMMA           reduce using rule 21 (expressao_classes -> ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN .)
+    RPAREN          reduce using rule 21 (expressao_classes -> ID AND LPAREN expressao_classes COMMA ID SOME ID RPAREN .)
+
+WARNING: 
+WARNING: Conflicts:
+WARNING: 
+WARNING: shift/reduce conflict for CLASS in state 22 resolved as shift
+WARNING: shift/reduce conflict for CLASS in state 22 resolved as shift
+WARNING: shift/reduce conflict for CLASS in state 24 resolved as shift
+WARNING: shift/reduce conflict for CLASS in state 25 resolved as shift
+WARNING: shift/reduce conflict for CLASS in state 27 resolved as shift
+WARNING: shift/reduce conflict for CLASS in state 28 resolved as shift
+WARNING: shift/reduce conflict for COMMA in state 39 resolved as shift
+WARNING: reduce/reduce conflict in state 9 resolved using rule (descricao_classes -> CLASS COLON ID)
+WARNING: rejected rule (empty -> <empty>) in state 9
