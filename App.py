@@ -274,6 +274,21 @@ def semantic_analysis(environment):
     
     # Verificar consistência das classes
     for class_name, class_data in environment['classes'].items():
+        order = ['CLASS', 'EQUIVALENTO', 'SUBCLASSOF', 'DISJOINTCLASSES', 'INDIVIDUALS']
+        current_order_index = 0
+        
+        for key in class_data.keys():
+            if key == order[current_order_index]:
+                current_order_index += 1
+            else:
+                print(f"Erro semântico: A palavra-chave '{key}' na descrição da classe '{class_name}' não segue a ordem correta.")
+                errors_found = True
+                break
+                
+        if current_order_index < len(order):
+            print(f"Erro semântico: A descrição da classe '{class_name}' está incompleta. A palavra-chave '{order[current_order_index]}' é esperada.")
+            errors_found = True
+    
         for subclass in class_data['subClassOf']:
             if subclass not in environment['classes']:
                 print(f"Erro semântico: Superclasse '{subclass}' não definida na classe '{class_name}'.")
@@ -300,7 +315,7 @@ def semantic_analysis(environment):
         print("Análise semântica concluída: Sem erros encontrados.")
     else:
         print("Análise semântica concluída: Foram encontrados erros.")
-
+        
 print("ANALISE SEMANTICAAAAAAAAAAAAAAAAAAAAAAA")
 # Chamada da análise semântica
 semantic_analysis(environment)
