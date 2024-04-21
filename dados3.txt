@@ -1,0 +1,43 @@
+class: Animal
+subclassof: LivingBeing
+
+class: Mammal
+subclassof: Animal
+
+class: Reptile
+subclassof: Animal
+
+class: LivingBeing
+has_number_of_legs: exactly 4
+
+class: Cat
+subclassof: Dog
+
+class: Dog
+has_color: brown
+
+class: Bird
+has_wings: exactly 2
+
+class: Fish
+has_number_of_legs: zero
+
+class: Cat
+subclassof: Mammal
+
+class: Dog
+subclassof: Mammal
+
+class: Snake
+subclassof: Reptile
+
+class: Bird
+subclassof: Reptile
+subclassof: Mammal
+
+class: Animal
+
+class: Mammal
+has_number_of_legs: exactly 2
+
+individuals: Dog1, Dog2, Cat1, Cat2, Snake1, Snake2, Fish1

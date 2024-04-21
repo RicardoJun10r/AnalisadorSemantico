@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 # Alunos: Vítor Duarte e Ricardo Júnior
 
 # Lendo o arquivo no diretório do projeto, contendo o exemplo a ser analisado.
-PATH = 'dados2.txt'
+PATH = 'dados3.txt'
 
-try:
+try:    
     with open(PATH, 'r') as arquivo:
         file = arquivo.read()
 except FileNotFoundError:
@@ -198,24 +198,25 @@ def p_subclasso_classes(p):
                       | EQUIVALENTO COLON expressao_classes
                       | empty
     '''
-    if 'SUBCLASSOF' in p[1]:
-        superclass = p[3]
-        if superclass not in environment['classes']:
-            print(f"Erro semântico: Superclasse '{superclass}' não definida.")
-        else:
-            environment['classes'][p[-1]]['subClassOf'].append(superclass)
-    elif 'DISJOINTCLASSES' in p[1]:
-        disjoint_class = p[3]
-        if disjoint_class not in environment['classes']:
-            print(f"Erro semântico: Classe disjunta '{disjoint_class}' não definida.")
-        else:
-            environment['classes'][p[-1]]['disjointWith'].append(disjoint_class)
-    elif 'EQUIVALENTO' in p[1]:
-        equivalent_class = p[3]
-        if equivalent_class not in environment['classes']:
-            print(f"Erro semântico: Classe equivalente '{equivalent_class}' não definida.")
-        else:
-            environment['classes'][p[-1]]['equivalentTo'].append(equivalent_class)
+    if len(p) > 2:
+        if 'SUBCLASSOF' in p[1]:
+            superclass = p[3]
+            if superclass not in environment['classes']:
+                print(f"Erro semântico: Superclasse '{superclass}' não definida.")
+            else:
+                environment['classes'][p[-1]]['subClassOf'].append(superclass)
+        elif 'DISJOINTCLASSES' in p[1]:
+            disjoint_class = p[3]
+            if disjoint_class not in environment['classes']:
+                print(f"Erro semântico: Classe disjunta '{disjoint_class}' não definida.")
+            else:
+                environment['classes'][p[-1]]['disjointWith'].append(disjoint_class)
+        elif 'EQUIVALENTO' in p[1]:
+            equivalent_class = p[3]
+            if equivalent_class not in environment['classes']:
+                print(f"Erro semântico: Classe equivalente '{equivalent_class}' não definida.")
+            else:
+                environment['classes'][p[-1]]['equivalentTo'].append(equivalent_class)
 
 def p_properties(p):
     '''
@@ -268,12 +269,38 @@ parser = yacc.yacc()
 parser.parse(file)
 
 # Analisador Semantico
+def semantic_analysis(environment):
+    errors_found = False
+    
+    # Verificar consistência das classes
+    for class_name, class_data in environment['classes'].items():
+        for subclass in class_data['subClassOf']:
+            if subclass not in environment['classes']:
+                print(f"Erro semântico: Superclasse '{subclass}' não definida na classe '{class_name}'.")
+                errors_found = True
+        for disjoint_class in class_data['disjointWith']:
+            if disjoint_class not in environment['classes']:
+                print(f"Erro semântico: Classe disjunta '{disjoint_class}' não definida na classe '{class_name}'.")
+                errors_found = True
+        for equivalent_class in class_data['equivalentTo']:
+            if equivalent_class not in environment['classes']:
+                print(f"Erro semântico: Classe equivalente '{equivalent_class}' não definida na classe '{class_name}'.")
+                errors_found = True
+    
+    # Verificar consistência das propriedades
+    for class_name, class_data in environment['classes'].items():
+        for property_name in class_data['properties']:
+            if property_name not in environment['relations']:
+                print(f"Erro semântico: Propriedade '{property_name}' não definida na classe '{class_name}'.")
+                errors_found = True
+    
+    # Outras verificações podem ser adicionadas aqui
+    
+    if not errors_found:
+        print("Análise semântica concluída: Sem erros encontrados.")
+    else:
+        print("Análise semântica concluída: Foram encontrados erros.")
 
-# while True:
-#     try:
-#         s = input('> ')
-#     except EOFError:
-#         break
-#     if not s: continue
-#     result = parser.parse(s)
-#     print(result)
+print("ANALISE SEMANTICAAAAAAAAAAAAAAAAAAAAAAA")
+# Chamada da análise semântica
+semantic_analysis(environment)
