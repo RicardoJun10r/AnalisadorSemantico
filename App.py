@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # Alunos: Vítor Duarte e Ricardo Júnior
 
 # Lendo o arquivo no diretório do projeto, contendo o exemplo a ser analisado.
-PATH = 'dados3.txt'
+PATH = 'dados4.txt'
 
 try:    
     with open(PATH, 'r') as arquivo:
@@ -272,23 +272,19 @@ parser.parse(file)
 def semantic_analysis(environment):
     errors_found = False
     
+    # Lista de palavras-chave na ordem esperada
+    expected_keywords_order = ['CLASS', 'EQUIVALENTO', 'SUBCLASSOF', 'DISJOINTCLASSES', 'INDIVIDUALS']
+    
     # Verificar consistência das classes
     for class_name, class_data in environment['classes'].items():
-        order = ['CLASS', 'EQUIVALENTO', 'SUBCLASSOF', 'DISJOINTCLASSES', 'INDIVIDUALS']
-        current_order_index = 0
-        
-        for key in class_data.keys():
-            if key == order[current_order_index]:
-                current_order_index += 1
-            else:
-                print(f"Erro semântico: A palavra-chave '{key}' na descrição da classe '{class_name}' não segue a ordem correta.")
-                errors_found = True
-                break
-                
-        if current_order_index < len(order):
-            print(f"Erro semântico: A descrição da classe '{class_name}' está incompleta. A palavra-chave '{order[current_order_index]}' é esperada.")
+        # Verificar se a ordem das palavras-chave está correta
+        actual_keywords_order = list(class_data.keys())
+        if actual_keywords_order != expected_keywords_order:
+            print(f"Erro semântico: A descrição da classe '{class_name}' está incorreta. A ordem esperada é {expected_keywords_order}.")
             errors_found = True
-    
+            continue
+        
+        # Verificar a existência das superclasses, classes disjuntas e classes equivalentes
         for subclass in class_data['subClassOf']:
             if subclass not in environment['classes']:
                 print(f"Erro semântico: Superclasse '{subclass}' não definida na classe '{class_name}'.")
@@ -308,6 +304,62 @@ def semantic_analysis(environment):
             if property_name not in environment['relations']:
                 print(f"Erro semântico: Propriedade '{property_name}' não definida na classe '{class_name}'.")
                 errors_found = True
+            elif 'INDIVIDUALS' in environment['relations'][property_name]:
+                print(f"Erro semântico: A propriedade de dados '{property_name}' na classe '{class_name}' não pode ter uma classe como domínio.")
+                errors_found = True
+            elif 'DATA_TYPE' not in environment['relations'][property_name]:
+                print(f"Erro semântico: A propriedade de dados '{property_name}' na classe '{class_name}' deve ter um tipo de dado como imagem.")
+                errors_found = True
+    
+    # Verificar a ordem dos axiomas de fechamento
+    for class_name, class_data in environment['classes'].items():
+        for property_name in class_data['properties']:
+            if 'only' in class_data['properties'][property_name]:
+                # Verificar se a propriedade existe
+                if property_name not in environment['relations']:
+                    print(f"Erro semântico: A propriedade '{property_name}' usada no axioma 'only' na classe '{class_name}' não foi definida previamente.")
+                    errors_found = True
+                else:
+                    # Verificar se a propriedade foi declarada anteriormente
+                    declared_properties = [prop for prop in environment['relations'] if 'INDIVIDUALS' not in prop]
+                    if property_name not in declared_properties:
+                        print(f"Erro semântico: A propriedade '{property_name}' usada no axioma 'only' na classe '{class_name}' precisa ser declarada antes de ser usada.")
+                        errors_found = True
+    
+    # Verificar o uso de operadores relacionais para delimitar intervalos
+    for class_name, class_data in environment['classes'].items():
+        for property_name in class_data['properties']:
+            for restriction in class_data['properties'][property_name]:
+                if isinstance(restriction, tuple) and isinstance(restriction[1], str):
+                    if restriction[1] not in ['>=', '>', '==', '<=', '<']:
+                        print(f"Erro semântico: O operador relacional '{restriction[1]}' usado na restrição da propriedade '{property_name}' na classe '{class_name}' não é válido.")
+                        errors_found = True
+    
+    # Verificar delimitação entre uma pizza hipercalórica e uma hipocalórica
+    for class_name, class_data in environment['classes'].items():
+        if class_name.lower() == 'pizza':
+            has_hypercaloric = False
+            has_hypocaloric = False
+            
+            for restriction in class_data.get('properties', {}).get('calories', []):
+                if isinstance(restriction, tuple) and isinstance(restriction[0], str) and isinstance(restriction[1], str):
+                    if '>=500' in restriction:
+                        has_hypercaloric = True
+                    elif '<=300' in restriction:
+                        has_hypocaloric = True
+            
+            if has_hypercaloric and has_hypocaloric:
+                print("Erro semântico: Uma pizza não pode ser ao mesmo tempo hipercalórica e hipocalórica.")
+                errors_found = True
+    
+    # Verificar a presença de numerais após os operadores min, max ou exactly
+    for class_name, class_data in environment['classes'].items():
+        for property_name in class_data['properties']:
+            for restriction in class_data['properties'][property_name]:
+                if isinstance(restriction, tuple) and isinstance(restriction[0], str) and restriction[0] in ['min', 'max', 'exactly']:
+                    if len(restriction) < 3 or not isinstance(restriction[2], int):
+                        print(f"Erro semântico: Após o operador '{restriction[0]}' na restrição da propriedade '{property_name}' na classe '{class_name}', é esperado um numeral.")
+                        errors_found = True
     
     # Outras verificações podem ser adicionadas aqui
     
@@ -315,7 +367,5 @@ def semantic_analysis(environment):
         print("Análise semântica concluída: Sem erros encontrados.")
     else:
         print("Análise semântica concluída: Foram encontrados erros.")
-        
-print("ANALISE SEMANTICAAAAAAAAAAAAAAAAAAAAAAA")
-# Chamada da análise semântica
+
 semantic_analysis(environment)
