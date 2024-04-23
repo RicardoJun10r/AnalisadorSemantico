@@ -273,7 +273,7 @@ def p_empty(p):
 def semantic_analysis(environment):
     errors_found = False
     semantic_errors_count = 0
-    
+
     # Lista de operadores e sua precedência
     operator_precedence = {
         '>': 1,
@@ -283,7 +283,16 @@ def semantic_analysis(environment):
         '==': 1,
     }
     
+    # Função para imprimir erros semânticos
+    def print_semantic_error(message):
+        nonlocal errors_found, semantic_errors_count
+        print(f"Erro semântico: {message}")
+        errors_found = True
+        semantic_errors_count += 1
+    
+    # Função para verificar a precedência dos operadores na restrição da propriedade
     def check_operator_precedence(restriction, class_name, property_name):
+        print(f"Verificando precedência do operador na restrição da propriedade '{property_name}' na classe '{class_name}': {restriction}")
         operators = ['>', '<', '>=', '<=', '==', 'and', 'or']
         if len(restriction) == 3 and restriction[1] in operator_precedence:
             operator = restriction[1]
@@ -292,20 +301,29 @@ def semantic_analysis(environment):
                 # Ambos os operandos são operadores, então verifique a precedência de cada um
                 left_precedence = operator_precedence.get(restriction[0], 0)
                 right_precedence = operator_precedence.get(restriction[2], 0)
-                if left_precedence > expected_precedence or right_precedence > expected_precedence:
+                if left_precedence > expected_precedence or (restriction[2] in operators and right_precedence > expected_precedence):
                     print(f"Erro semântico: O operador '{operator}' na restrição da propriedade '{property_name}' na classe '{class_name}' tem precedência mais alta do que o esperado.")
                     return True
             elif restriction[0] in operators and restriction[1] in operators:
-                # Caso especial: o primeiro operando é um operador e o segundo é o valor
-                # Verifique apenas a precedência do primeiro operador
+                # Ambos os operandos são operadores, mas um deles é uma expressão aninhada
                 left_precedence = operator_precedence.get(restriction[0], 0)
                 if left_precedence > expected_precedence:
                     print(f"Erro semântico: O operador '{operator}' na restrição da propriedade '{property_name}' na classe '{class_name}' tem precedência mais alta do que o esperado.")
                     return True
+                # Verifique a precedência dentro da expressão aninhada
+                if check_operator_precedence(restriction[1], class_name, property_name):
+                    return True
+            elif restriction[2] in operators:
+                # O segundo operando é um operador, mas o primeiro é um valor
+                right_precedence = operator_precedence.get(restriction[2], 0)
+                if right_precedence > expected_precedence:
+                    print(f"Erro semântico: O operador '{operator}' na restrição da propriedade '{property_name}' na classe '{class_name}' tem precedência mais alta do que o esperado.")
+                    return True
         return False
 
-    # Função para verificar a consistência das restrições de valores mínimos, máximos e exatos
+    # Função para verificar a consistência das restrições de cardinalidade
     def check_cardinality_restrictions(restriction, class_name, property_name):
+        print(f"Verificando restrições de cardinalidade para a propriedade '{property_name}' na classe '{class_name}': {restriction}")
         if restriction[0] == 'exactly':
             if restriction[2] != 1:
                 print(f"Erro semântico: Restrição 'exactly' para a propriedade '{property_name}' na classe '{class_name}' deve ter o valor '1'.")
@@ -316,35 +334,25 @@ def semantic_analysis(environment):
     for class_name, class_data in environment['classes'].items():
         for property_name in class_data['properties']:
             if property_name not in environment['relations']:
-                print(f"Erro semântico: Propriedade '{property_name}' não definida na classe '{class_name}'.")
-                errors_found = True
-                semantic_errors_count += 1
+                print_semantic_error(f"Propriedade '{property_name}' não definida na classe '{class_name}'.")
             elif 'INDIVIDUALS' in environment['relations'][property_name]:
-                print(f"Erro semântico: A propriedade de dados '{property_name}' na classe '{class_name}' não pode ter uma classe como domínio.")
-                errors_found = True
-                semantic_errors_count += 1
+                print_semantic_error(f"A propriedade de dados '{property_name}' na classe '{class_name}' não pode ter uma classe como domínio.")
             elif 'DATA_TYPE' not in environment['relations'][property_name]:
-                print(f"Erro semântico: A propriedade de dados '{property_name}' na classe '{class_name}' deve ter um tipo de dado como imagem.")
-                errors_found = True
-                semantic_errors_count += 1
+                print_semantic_error(f"A propriedade de dados '{property_name}' na classe '{class_name}' deve ter um tipo de dado como imagem.")
             else:
                 # Verificar as restrições sobre propriedades
                 for restriction in class_data['properties'][property_name]:
                     if isinstance(restriction, tuple) and isinstance(restriction[0], str) and restriction[0] in ['min', 'max', 'exactly']:
                         # Verificar se o numeral está presente após os operadores min, max ou exactly
                         if len(restriction) < 3 or not isinstance(restriction[2], int):
-                            print(f"Erro semântico: Após o operador '{restriction[0]}' na restrição da propriedade '{property_name}' na classe '{class_name}', é esperado um numeral.")
-                            errors_found = True
-                            semantic_errors_count += 1
+                            print_semantic_error(f"Após o operador '{restriction[0]}' na restrição da propriedade '{property_name}' na classe '{class_name}', é esperado um numeral.")
                         else:
                             # Verificar a precedência dos operadores
                             if check_operator_precedence(restriction, class_name, property_name):
-                                errors_found = True
-                                semantic_errors_count += 1
+                                print_semantic_error(f"O operador na restrição da propriedade '{property_name}' na classe '{class_name}' tem precedência mais alta do que o esperado.")
                             # Verificar consistência das restrições de cardinalidade
                             if check_cardinality_restrictions(restriction, class_name, property_name):
-                                errors_found = True
-                                semantic_errors_count += 1
+                                print_semantic_error(f"Restrição '{restriction[0]}' para a propriedade '{property_name}' na classe '{class_name}' deve ter o valor '1'.")
     
     # Outras verificações podem ser adicionadas aqui
     if not errors_found:
