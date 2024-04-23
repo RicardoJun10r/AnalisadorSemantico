@@ -177,7 +177,9 @@ def p_ontologia(p):
 
 def p_descricao_classes(p):
     '''
-    descricao_classes : CLASS COLON ID subclasso_classes descricao_classes
+    descricao_classes : CLASS COLON ID subclasso_classes propriedades descricao_classes
+                      | CLASS COLON ID subclasso_classes descricao_classes
+                      | CLASS COLON ID propriedades descricao_classes
                       | CLASS COLON ID
     '''
     class_name = p[3]
@@ -189,14 +191,13 @@ def p_descricao_classes(p):
 def p_subclasso_classes(p):
     '''
     subclasso_classes : SUBCLASSOF COLON expressao_classes propriedades descricao_classes
-                      | SUBCLASSOF COLON expressao_classes propriedades
-                      | SUBCLASSOF COLON expressao_classes descricao_classes
-                      | SUBCLASSOF COLON expressao_classes
                       | DISJOINTCLASSES COLON expressao_classes descricao_classes
-                      | DISJOINTCLASSES COLON expressao_classes
                       | EQUIVALENTO COLON expressao_classes descricao_classes
+                      | SUBCLASSOF COLON expressao_classes descricao_classes
+                      | DISJOINTCLASSES COLON expressao_classes
                       | EQUIVALENTO COLON expressao_classes
-                      | empty
+                      | SUBCLASSOF COLON expressao_classes propriedades
+                      | SUBCLASSOF COLON expressao_classes
     '''
     if len(p) > 2:
         if 'SUBCLASSOF' in p[1]:
@@ -218,7 +219,7 @@ def p_subclasso_classes(p):
             else:
                 environment['classes'][p[-1]]['equivalentTo'].append(equivalent_class)
 
-def p_properties(p):
+def p_propriedades(p):
     '''
     propriedades : expressao_classes descricao_classes propriedades
                  | expressao_classes propriedades
@@ -226,6 +227,12 @@ def p_properties(p):
     '''
     global property_count
     property_count += 1
+    class_name = p[-2]
+    property_name = p[1]
+    if class_name in environment['classes']:
+        environment['classes'][class_name]['properties'].append(property_name)
+    else:
+        print(f"Erro semântico: Classe '{class_name}' não encontrada para registrar a propriedade '{property_name}'.")
 
 def p_descricao_individuals(p):
     '''
@@ -262,41 +269,48 @@ def p_empty(p):
     '''
     pass
 
-# Construção do analisador Sintático
-parser = yacc.yacc()
-
-# Analisa os dados utilizando o parser
-parser.parse(file)
-
 # Analisador Semantico
 def semantic_analysis(environment):
     errors_found = False
+    semantic_errors_count = 0
     
-    # Lista de palavras-chave na ordem esperada
-    expected_keywords_order = ['CLASS', 'EQUIVALENTO', 'SUBCLASSOF', 'DISJOINTCLASSES', 'INDIVIDUALS']
+    # Lista de operadores e sua precedência
+    operator_precedence = {
+        '>': 1,
+        '<': 1,
+        '>=': 1,
+        '<=': 1,
+        '==': 1,
+    }
     
-    # Verificar consistência das classes
-    for class_name, class_data in environment['classes'].items():
-        # Verificar se a ordem das palavras-chave está correta
-        actual_keywords_order = list(class_data.keys())
-        if actual_keywords_order != expected_keywords_order:
-            print(f"Erro semântico: A descrição da classe '{class_name}' está incorreta. A ordem esperada é {expected_keywords_order}.")
-            errors_found = True
-            continue
-        
-        # Verificar a existência das superclasses, classes disjuntas e classes equivalentes
-        for subclass in class_data['subClassOf']:
-            if subclass not in environment['classes']:
-                print(f"Erro semântico: Superclasse '{subclass}' não definida na classe '{class_name}'.")
-                errors_found = True
-        for disjoint_class in class_data['disjointWith']:
-            if disjoint_class not in environment['classes']:
-                print(f"Erro semântico: Classe disjunta '{disjoint_class}' não definida na classe '{class_name}'.")
-                errors_found = True
-        for equivalent_class in class_data['equivalentTo']:
-            if equivalent_class not in environment['classes']:
-                print(f"Erro semântico: Classe equivalente '{equivalent_class}' não definida na classe '{class_name}'.")
-                errors_found = True
+    def check_operator_precedence(restriction, class_name, property_name):
+        operators = ['>', '<', '>=', '<=', '==', 'and', 'or']
+        if len(restriction) == 3 and restriction[1] in operator_precedence:
+            operator = restriction[1]
+            expected_precedence = operator_precedence[operator]
+            if restriction[0] in operators and restriction[2] in operators:
+                # Ambos os operandos são operadores, então verifique a precedência de cada um
+                left_precedence = operator_precedence.get(restriction[0], 0)
+                right_precedence = operator_precedence.get(restriction[2], 0)
+                if left_precedence > expected_precedence or right_precedence > expected_precedence:
+                    print(f"Erro semântico: O operador '{operator}' na restrição da propriedade '{property_name}' na classe '{class_name}' tem precedência mais alta do que o esperado.")
+                    return True
+            elif restriction[0] in operators and restriction[1] in operators:
+                # Caso especial: o primeiro operando é um operador e o segundo é o valor
+                # Verifique apenas a precedência do primeiro operador
+                left_precedence = operator_precedence.get(restriction[0], 0)
+                if left_precedence > expected_precedence:
+                    print(f"Erro semântico: O operador '{operator}' na restrição da propriedade '{property_name}' na classe '{class_name}' tem precedência mais alta do que o esperado.")
+                    return True
+        return False
+
+    # Função para verificar a consistência das restrições de valores mínimos, máximos e exatos
+    def check_cardinality_restrictions(restriction, class_name, property_name):
+        if restriction[0] == 'exactly':
+            if restriction[2] != 1:
+                print(f"Erro semântico: Restrição 'exactly' para a propriedade '{property_name}' na classe '{class_name}' deve ter o valor '1'.")
+                return True
+        return False
     
     # Verificar consistência das propriedades
     for class_name, class_data in environment['classes'].items():
@@ -304,68 +318,45 @@ def semantic_analysis(environment):
             if property_name not in environment['relations']:
                 print(f"Erro semântico: Propriedade '{property_name}' não definida na classe '{class_name}'.")
                 errors_found = True
+                semantic_errors_count += 1
             elif 'INDIVIDUALS' in environment['relations'][property_name]:
                 print(f"Erro semântico: A propriedade de dados '{property_name}' na classe '{class_name}' não pode ter uma classe como domínio.")
                 errors_found = True
+                semantic_errors_count += 1
             elif 'DATA_TYPE' not in environment['relations'][property_name]:
                 print(f"Erro semântico: A propriedade de dados '{property_name}' na classe '{class_name}' deve ter um tipo de dado como imagem.")
                 errors_found = True
-    
-    # Verificar a ordem dos axiomas de fechamento
-    for class_name, class_data in environment['classes'].items():
-        for property_name in class_data['properties']:
-            if 'only' in class_data['properties'][property_name]:
-                # Verificar se a propriedade existe
-                if property_name not in environment['relations']:
-                    print(f"Erro semântico: A propriedade '{property_name}' usada no axioma 'only' na classe '{class_name}' não foi definida previamente.")
-                    errors_found = True
-                else:
-                    # Verificar se a propriedade foi declarada anteriormente
-                    declared_properties = [prop for prop in environment['relations'] if 'INDIVIDUALS' not in prop]
-                    if property_name not in declared_properties:
-                        print(f"Erro semântico: A propriedade '{property_name}' usada no axioma 'only' na classe '{class_name}' precisa ser declarada antes de ser usada.")
-                        errors_found = True
-    
-    # Verificar o uso de operadores relacionais para delimitar intervalos
-    for class_name, class_data in environment['classes'].items():
-        for property_name in class_data['properties']:
-            for restriction in class_data['properties'][property_name]:
-                if isinstance(restriction, tuple) and isinstance(restriction[1], str):
-                    if restriction[1] not in ['>=', '>', '==', '<=', '<']:
-                        print(f"Erro semântico: O operador relacional '{restriction[1]}' usado na restrição da propriedade '{property_name}' na classe '{class_name}' não é válido.")
-                        errors_found = True
-    
-    # Verificar delimitação entre uma pizza hipercalórica e uma hipocalórica
-    for class_name, class_data in environment['classes'].items():
-        if class_name.lower() == 'pizza':
-            has_hypercaloric = False
-            has_hypocaloric = False
-            
-            for restriction in class_data.get('properties', {}).get('calories', []):
-                if isinstance(restriction, tuple) and isinstance(restriction[0], str) and isinstance(restriction[1], str):
-                    if '>=500' in restriction:
-                        has_hypercaloric = True
-                    elif '<=300' in restriction:
-                        has_hypocaloric = True
-            
-            if has_hypercaloric and has_hypocaloric:
-                print("Erro semântico: Uma pizza não pode ser ao mesmo tempo hipercalórica e hipocalórica.")
-                errors_found = True
-    
-    # Verificar a presença de numerais após os operadores min, max ou exactly
-    for class_name, class_data in environment['classes'].items():
-        for property_name in class_data['properties']:
-            for restriction in class_data['properties'][property_name]:
-                if isinstance(restriction, tuple) and isinstance(restriction[0], str) and restriction[0] in ['min', 'max', 'exactly']:
-                    if len(restriction) < 3 or not isinstance(restriction[2], int):
-                        print(f"Erro semântico: Após o operador '{restriction[0]}' na restrição da propriedade '{property_name}' na classe '{class_name}', é esperado um numeral.")
-                        errors_found = True
+                semantic_errors_count += 1
+            else:
+                # Verificar as restrições sobre propriedades
+                for restriction in class_data['properties'][property_name]:
+                    if isinstance(restriction, tuple) and isinstance(restriction[0], str) and restriction[0] in ['min', 'max', 'exactly']:
+                        # Verificar se o numeral está presente após os operadores min, max ou exactly
+                        if len(restriction) < 3 or not isinstance(restriction[2], int):
+                            print(f"Erro semântico: Após o operador '{restriction[0]}' na restrição da propriedade '{property_name}' na classe '{class_name}', é esperado um numeral.")
+                            errors_found = True
+                            semantic_errors_count += 1
+                        else:
+                            # Verificar a precedência dos operadores
+                            if check_operator_precedence(restriction, class_name, property_name):
+                                errors_found = True
+                                semantic_errors_count += 1
+                            # Verificar consistência das restrições de cardinalidade
+                            if check_cardinality_restrictions(restriction, class_name, property_name):
+                                errors_found = True
+                                semantic_errors_count += 1
     
     # Outras verificações podem ser adicionadas aqui
-    
     if not errors_found:
         print("Análise semântica concluída: Sem erros encontrados.")
     else:
-        print("Análise semântica concluída: Foram encontrados erros.")
+        print(f"Análise semântica concluída: Foram encontrados {semantic_errors_count} erros.")
 
+# Construção do analisador Sintático
+parser = yacc.yacc()
+
+# Analisa os dados utilizando o parser
+parser.parse(file)
+
+# Analisador Semantico
 semantic_analysis(environment)
