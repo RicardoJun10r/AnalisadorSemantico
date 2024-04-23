@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # Alunos: Vítor Duarte e Ricardo Júnior
 
 # Lendo o arquivo no diretório do projeto, contendo o exemplo a ser analisado.
-PATH = 'dados4.txt'
+PATH = 'dados5.txt'
 
 try:    
     with open(PATH, 'r') as arquivo:
@@ -188,10 +188,13 @@ def p_propriedades(p):
     '''
     if len(p) > 1:
         property_name = p[1]
-        environment['classes'][p[-1]]['properties'].append(property_name)
         # Check if the property is not already in the environment and add if necessary
         if property_name not in environment['relations']:
             environment['relations'][property_name] = {}
+        # Add the property to the current class
+        if len(p) > 2:
+            class_name = p[-1]
+            environment['classes'][class_name]['properties'].append(property_name)
 
 
 def p_descricao_individuals(p):
@@ -213,12 +216,7 @@ def p_expressao_classes(p):
 
 def p_error(p):
     if p:
-        print(f"Erro sintático: Erro de sintaxe em '{p.value}' na linha {p.lineno}, posição {p.lexpos}")
-        # Verifica se o número da linha está dentro dos limites do código
-        if p.lineno - 1 < len(file.splitlines()):
-            print(f"Trecho do código: {file.splitlines()[p.lineno - 1]}")
-        else:
-            print("Trecho do código indisponível")
+        return
     else:
         print("Erro sintático: Fim inesperado do arquivo")
 
@@ -286,6 +284,16 @@ def semantic_analysis():
                 return any(evaluate_subclass_expression(operand) for operand in operands)
         return False
 
+    # Analisar erros em classes
+    print("Analisando erros em 'classes':")
+    for class_name, class_data in environment['classes'].items():
+        # Verificar se a classe tem restrições
+        if 'subClassOf' in class_data:
+            for restriction in class_data['subClassOf']:
+                # Verificar se a restrição é uma expressão de subclasse válida
+                if not evaluate_subclass_expression(restriction):
+                    print_semantic_error(f"Expressão de subclasse inválida para a classe '{class_name}': {restriction}")
+
     # Analisar erros em relations
     print("Analisando erros em 'relations':")
     for property_name, property_data in environment['relations'].items():
@@ -334,7 +342,6 @@ def semantic_analysis():
     else:
         print(f"Análise semântica concluída: Foram encontrados {semantic_errors_count} erros.")
 
-
 # Função para avaliar expressões de subclasse
 def evaluate_subclass_expression(expression):
     if isinstance(expression, str):
@@ -350,7 +357,9 @@ def evaluate_subclass_expression(expression):
             return any(evaluate_subclass_expression(operand) for operand in operands)
     return False
 
+
 # Função principal
+current_class = None  # Variável para rastrear a classe atual
 while True:
     tok = lexer.token()
     if not tok:
@@ -358,16 +367,23 @@ while True:
     found_tokens.append((tok.lineno, tok.type, tok.value))
     if tok.type == 'PROPERTY':
         property_count += 1
+        property_name = tok.value
         # Verifica se a propriedade já está no ambiente e adiciona se necessário
-        if 'PROPERTY' not in environment['relations']:
-            environment['relations'][tok.value] = {}
+        if property_name not in environment['relations']:
+            environment['relations'][property_name] = {}
+        # Adiciona a propriedade à classe atual, se houver
+        if current_class:
+            environment['classes'][current_class]['properties'].append(property_name)
     elif tok.type == 'CLASS':
         classes_count += 1
-        if tok.value.islower():
+        class_name = tok.value
+        if class_name.islower():
             primitive_classes_count += 1
         # Verifica se a classe já está no ambiente e adiciona se necessário
-        if 'CLASS' not in environment['relations']:
-            environment['relations'][tok.value] = {}
+        if class_name not in environment['classes']:
+            environment['classes'][class_name] = {'subClassOf': [], 'properties': []}
+        # Define a classe atual para associar propriedades
+        current_class = class_name
 
 
 # Construção do analisador Sintático
@@ -376,12 +392,6 @@ parser = yacc.yacc()
 # Analisa os dados utilizando o parser
 parser.parse(file)
 
-# Em seguida está o resumo da análise
-print(f"######################################## Resumo #########################################")
-print(f"#                           Quantidade de Propriedades: {property_count}\t\t\t\t#")
-print(f"#                           Quantidade de Classes: {classes_count}\t\t\t\t\t#")
-print(f"#########################################################################################")
-
-
+print("Análise Semântica: ")
 # Analisador Semantico
 semantic_analysis()

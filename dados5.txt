@@ -1,0 +1,32 @@
+Class: Animal
+    SubClassOf: hasPart some Organ and hasColor some (Red or Blue)
+    SubClassOf: hasPart some Organ and hasColor some (Red or (hasPart some Organ and hasColor some Blue))
+    SubClassOf: hasPart some Organ and hasColor some ((hasPart some Organ and hasColor some Red) or Blue)
+
+Class: Measurement
+    SubClassOf: hasValue min 0 xsd:integer
+    SubClassOf: hasValue min 0 xsd:string
+    SubClassOf: hasValue min 0 PizzaTopping
+
+Class: Person
+    SubClassOf: hasAge min 18
+    SubClassOf: hasAge exactly 21 xsd:integer
+    SubClassOf: hasAge min 18 xsd:integer
+
+Individual: Bob
+    Types: Human
+    Facts: hasAge 25
+
+Relation: hasPart
+    Domain: Organ
+    Range: Part
+
+Relation: hasColor
+    Domain: Thing
+    Range: Color
+    InverseOf: colorOf
+
+Relation: or
+    Domain: Thing
+    Range: Thing
+
