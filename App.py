@@ -150,30 +150,12 @@ property_count = 0
 classes_count = 0
 primitive_classes_count = 0
 
-# Função principal
-while True:
-    tok = lexer.token()
-    if not tok:
-        break
-    found_tokens.append((tok.lineno, tok.type, tok.value))
-    if tok.type == 'PROPERTY':
-        property_count += 1
-    elif tok.type == 'CLASS':
-        classes_count += 1
-        if tok.value.islower():
-            primitive_classes_count += 1
-
-# Em seguida está o resumo da análise
-print(f"######################################## Resumo #########################################")
-print(f"#                           Quantidade de Propriedades: {property_count}\t\t\t\t#")
-print(f"#                           Quantidade de Classes: {classes_count}\t\t\t\t\t#")
-print(f"#########################################################################################")
-
 # Regras de produção sintáticas
 def p_ontologia(p):
     '''
     ontologia : descricao_classes descricao_individuals
     '''
+    print("Debug: Entrou na regra p_ontologia")
 
 def p_descricao_classes(p):
     '''
@@ -186,53 +168,31 @@ def p_descricao_classes(p):
     if class_name in environment['classes']:
         print(f"Erro semântico: Classe '{class_name}' já definida.")
     else:
-        environment['classes'][class_name] = {'equivalentTo': [], 'subClassOf': [], 'disjointWith': [], 'properties': []}
+        environment['classes'][class_name] = {'subClassOf': [], 'properties': []}
 
 def p_subclasso_classes(p):
     '''
-    subclasso_classes : SUBCLASSOF COLON expressao_classes propriedades descricao_classes
-                      | DISJOINTCLASSES COLON expressao_classes descricao_classes
-                      | EQUIVALENTO COLON expressao_classes descricao_classes
-                      | SUBCLASSOF COLON expressao_classes descricao_classes
-                      | DISJOINTCLASSES COLON expressao_classes
-                      | EQUIVALENTO COLON expressao_classes
-                      | SUBCLASSOF COLON expressao_classes propriedades
+    subclasso_classes : SUBCLASSOF COLON expressao_classes propriedades
                       | SUBCLASSOF COLON expressao_classes
+                      | empty
     '''
     if len(p) > 2:
-        if 'SUBCLASSOF' in p[1]:
-            superclass = p[3]
-            if superclass not in environment['classes']:
-                print(f"Erro semântico: Superclasse '{superclass}' não definida.")
-            else:
-                environment['classes'][p[-1]]['subClassOf'].append(superclass)
-        elif 'DISJOINTCLASSES' in p[1]:
-            disjoint_class = p[3]
-            if disjoint_class not in environment['classes']:
-                print(f"Erro semântico: Classe disjunta '{disjoint_class}' não definida.")
-            else:
-                environment['classes'][p[-1]]['disjointWith'].append(disjoint_class)
-        elif 'EQUIVALENTO' in p[1]:
-            equivalent_class = p[3]
-            if equivalent_class not in environment['classes']:
-                print(f"Erro semântico: Classe equivalente '{equivalent_class}' não definida.")
-            else:
-                environment['classes'][p[-1]]['equivalentTo'].append(equivalent_class)
+        subclass_expr = p[3]
+        environment['classes'][p[-1]]['subClassOf'] = subclass_expr
 
 def p_propriedades(p):
     '''
-    propriedades : expressao_classes descricao_classes propriedades
-                 | expressao_classes propriedades
+    propriedades : PROPERTY propriedades
+                 | PROPERTY
                  | empty
     '''
-    global property_count
-    property_count += 1
-    class_name = p[-2]
-    property_name = p[1]
-    if class_name in environment['classes']:
-        environment['classes'][class_name]['properties'].append(property_name)
-    else:
-        print(f"Erro semântico: Classe '{class_name}' não encontrada para registrar a propriedade '{property_name}'.")
+    if len(p) > 1:
+        property_name = p[1]
+        environment['classes'][p[-1]]['properties'].append(property_name)
+        # Check if the property is not already in the environment and add if necessary
+        if property_name not in environment['relations']:
+            environment['relations'][property_name] = {}
+
 
 def p_descricao_individuals(p):
     '''
@@ -269,96 +229,146 @@ def p_empty(p):
     '''
     pass
 
-# Analisador Semantico
-def semantic_analysis(environment):
+def semantic_analysis():
+    global environment
     errors_found = False
     semantic_errors_count = 0
 
-    # Lista de operadores e sua precedência
-    operator_precedence = {
-        '>': 1,
-        '<': 1,
-        '>=': 1,
-        '<=': 1,
-        '==': 1,
-    }
-    
     # Função para imprimir erros semânticos
     def print_semantic_error(message):
         nonlocal errors_found, semantic_errors_count
         print(f"Erro semântico: {message}")
         errors_found = True
         semantic_errors_count += 1
-    
-    # Função para verificar a precedência dos operadores na restrição da propriedade
-    def check_operator_precedence(restriction, class_name, property_name):
-        print(f"Verificando precedência do operador na restrição da propriedade '{property_name}' na classe '{class_name}': {restriction}")
-        operators = ['>', '<', '>=', '<=', '==', 'and', 'or']
-        if len(restriction) == 3 and restriction[1] in operator_precedence:
-            operator = restriction[1]
-            expected_precedence = operator_precedence[operator]
-            if restriction[0] in operators and restriction[2] in operators:
-                # Ambos os operandos são operadores, então verifique a precedência de cada um
-                left_precedence = operator_precedence.get(restriction[0], 0)
-                right_precedence = operator_precedence.get(restriction[2], 0)
-                if left_precedence > expected_precedence or (restriction[2] in operators and right_precedence > expected_precedence):
-                    print(f"Erro semântico: O operador '{operator}' na restrição da propriedade '{property_name}' na classe '{class_name}' tem precedência mais alta do que o esperado.")
-                    return True
-            elif restriction[0] in operators and restriction[1] in operators:
-                # Ambos os operandos são operadores, mas um deles é uma expressão aninhada
-                left_precedence = operator_precedence.get(restriction[0], 0)
-                if left_precedence > expected_precedence:
-                    print(f"Erro semântico: O operador '{operator}' na restrição da propriedade '{property_name}' na classe '{class_name}' tem precedência mais alta do que o esperado.")
-                    return True
-                # Verifique a precedência dentro da expressão aninhada
-                if check_operator_precedence(restriction[1], class_name, property_name):
-                    return True
-            elif restriction[2] in operators:
-                # O segundo operando é um operador, mas o primeiro é um valor
-                right_precedence = operator_precedence.get(restriction[2], 0)
-                if right_precedence > expected_precedence:
-                    print(f"Erro semântico: O operador '{operator}' na restrição da propriedade '{property_name}' na classe '{class_name}' tem precedência mais alta do que o esperado.")
-                    return True
+
+    # Função para verificar sobrecarregamento de uma propriedade
+    def verifica_sobrecarregamento(property_name):
+        property_types = set()  # Conjunto para armazenar os tipos de valores encontrados
+
+        # Iterar sobre as classes para encontrar o uso da propriedade
+        for class_name, class_data in environment['classes'].items():
+            properties = class_data.get('properties', [])
+            if property_name in properties:
+                # Verificar o tipo de valor usado para esta propriedade nesta classe
+                property_types.update(obter_tipos_propriedade(class_name, property_name))
+
+        # Se houver mais de um tipo de valor encontrado, há sobrecarregamento
+        return len(property_types) > 1
+
+    # Função para obter tipos de valores para uma propriedade em uma classe específica
+    def obter_tipos_propriedade(class_name, property_name):
+        property_types = set()  # Conjunto para armazenar os tipos de valores encontrados
+
+        # Aqui você pode adicionar lógica específica do seu sistema para determinar o tipo de valor usado
+        # Exemplo básico: assumindo que o tipo de valor é baseado no nome da classe
+        if 'String' in class_name:
+            property_types.add('string')
+        elif 'Integer' in class_name:
+            property_types.add('integer')
+        elif 'Float' in class_name:
+            property_types.add('float')
+        # Adicione mais lógica conforme necessário para outros tipos de valores
+
+        return property_types
+
+    # Função para avaliar expressões de subclasse
+    def evaluate_subclass_expression(expression):
+        if isinstance(expression, str):
+            # A single class name
+            return expression in environment['classes']
+        elif isinstance(expression, tuple):
+            # A conjunction or disjunction of expressions
+            operator = expression[0]
+            operands = expression[1:]
+            if operator == 'and':
+                return all(evaluate_subclass_expression(operand) for operand in operands)
+            elif operator == 'or':
+                return any(evaluate_subclass_expression(operand) for operand in operands)
         return False
 
-    # Função para verificar a consistência das restrições de cardinalidade
-    def check_cardinality_restrictions(restriction, class_name, property_name):
-        print(f"Verificando restrições de cardinalidade para a propriedade '{property_name}' na classe '{class_name}': {restriction}")
-        if restriction[0] == 'exactly':
-            if restriction[2] != 1:
-                print(f"Erro semântico: Restrição 'exactly' para a propriedade '{property_name}' na classe '{class_name}' deve ter o valor '1'.")
-                return True
-        return False
-    
-    # Verificar consistência das propriedades
-    for class_name, class_data in environment['classes'].items():
-        for property_name in class_data['properties']:
-            if property_name not in environment['relations']:
-                print_semantic_error(f"Propriedade '{property_name}' não definida na classe '{class_name}'.")
-            elif 'INDIVIDUALS' in environment['relations'][property_name]:
-                print_semantic_error(f"A propriedade de dados '{property_name}' na classe '{class_name}' não pode ter uma classe como domínio.")
-            elif 'DATA_TYPE' not in environment['relations'][property_name]:
-                print_semantic_error(f"A propriedade de dados '{property_name}' na classe '{class_name}' deve ter um tipo de dado como imagem.")
-            else:
-                # Verificar as restrições sobre propriedades
-                for restriction in class_data['properties'][property_name]:
-                    if isinstance(restriction, tuple) and isinstance(restriction[0], str) and restriction[0] in ['min', 'max', 'exactly']:
-                        # Verificar se o numeral está presente após os operadores min, max ou exactly
-                        if len(restriction) < 3 or not isinstance(restriction[2], int):
-                            print_semantic_error(f"Após o operador '{restriction[0]}' na restrição da propriedade '{property_name}' na classe '{class_name}', é esperado um numeral.")
-                        else:
-                            # Verificar a precedência dos operadores
-                            if check_operator_precedence(restriction, class_name, property_name):
-                                print_semantic_error(f"O operador na restrição da propriedade '{property_name}' na classe '{class_name}' tem precedência mais alta do que o esperado.")
-                            # Verificar consistência das restrições de cardinalidade
-                            if check_cardinality_restrictions(restriction, class_name, property_name):
-                                print_semantic_error(f"Restrição '{restriction[0]}' para a propriedade '{property_name}' na classe '{class_name}' deve ter o valor '1'.")
-    
-    # Outras verificações podem ser adicionadas aqui
+    # Analisar erros em relations
+    print("Analisando erros em 'relations':")
+    for property_name, property_data in environment['relations'].items():
+        # Verificar se a propriedade tem restrições
+        if isinstance(property_data, list):
+            for restriction in property_data:
+                # Verificar se a restrição é uma tupla
+                if isinstance(restriction, tuple):
+                    # 1. Verificar precedência dos operadores
+                    if 'or' in restriction and 'and' in restriction:
+                        or_index = restriction.index('or')
+                        and_index = restriction.index('and')
+                        if or_index > and_index:
+                            print_semantic_error(f"Erro de precedência de operadores na propriedade '{property_name}'")
+
+                    # 2. Verificar coerção
+                    if restriction[0] in ['min', 'max', 'exactly']:
+                        # Verificar o tipo do valor da restrição
+                        if not isinstance(restriction[2], int):
+                            print_semantic_error(f"Valor '{restriction[2]}' na restrição da propriedade '{property_name}' não é do tipo esperado")
+
+                    # 3. Verificar sobrecarregamento
+                    if verifica_sobrecarregamento(property_name):
+                        print_semantic_error(f"Sobrecarregamento detectado para a propriedade '{property_name}'")
+
+                    # Verificar a validade da restrição
+                    if restriction[0] not in ['min', 'max', 'exactly']:
+                        print_semantic_error(f"Restrição inválida '{restriction[0]}' para a propriedade '{property_name}'")
+                    elif len(restriction) < 3:
+                        print_semantic_error(f"Faltam argumentos na restrição da propriedade '{property_name}'")
+                    elif not isinstance(restriction[2], int):
+                        print_semantic_error(f"Valor inválido '{restriction[2]}' na restrição da propriedade '{property_name}'")
+                    elif restriction[0] == 'exactly' and restriction[2] != 1:
+                        print_semantic_error(f"Restrição 'exactly' para a propriedade '{property_name}' deve ter o valor '1'")
+                # Verificar se a restrição é uma expressão de subclasse
+                elif isinstance(restriction, tuple):
+                    result = evaluate_subclass_expression(restriction)
+                    if not result:
+                        print_semantic_error(f"Expressão de subclasse inválida na propriedade '{property_name}': {restriction}")
+        else:
+            # A propriedade não possui restrições
+            print_semantic_error(f"A propriedade '{property_name}' não possui restrições definidas")
+
     if not errors_found:
         print("Análise semântica concluída: Sem erros encontrados.")
     else:
         print(f"Análise semântica concluída: Foram encontrados {semantic_errors_count} erros.")
+
+
+# Função para avaliar expressões de subclasse
+def evaluate_subclass_expression(expression):
+    if isinstance(expression, str):
+        # A single class name
+        return expression in environment['classes']
+    elif isinstance(expression, tuple):
+        # A conjunction or disjunction of expressions
+        operator = expression[0]
+        operands = expression[1:]
+        if operator == 'and':
+            return all(evaluate_subclass_expression(operand) for operand in operands)
+        elif operator == 'or':
+            return any(evaluate_subclass_expression(operand) for operand in operands)
+    return False
+
+# Função principal
+while True:
+    tok = lexer.token()
+    if not tok:
+        break
+    found_tokens.append((tok.lineno, tok.type, tok.value))
+    if tok.type == 'PROPERTY':
+        property_count += 1
+        # Verifica se a propriedade já está no ambiente e adiciona se necessário
+        if 'PROPERTY' not in environment['relations']:
+            environment['relations'][tok.value] = {}
+    elif tok.type == 'CLASS':
+        classes_count += 1
+        if tok.value.islower():
+            primitive_classes_count += 1
+        # Verifica se a classe já está no ambiente e adiciona se necessário
+        if 'CLASS' not in environment['relations']:
+            environment['relations'][tok.value] = {}
+
 
 # Construção do analisador Sintático
 parser = yacc.yacc()
@@ -366,5 +376,12 @@ parser = yacc.yacc()
 # Analisa os dados utilizando o parser
 parser.parse(file)
 
+# Em seguida está o resumo da análise
+print(f"######################################## Resumo #########################################")
+print(f"#                           Quantidade de Propriedades: {property_count}\t\t\t\t#")
+print(f"#                           Quantidade de Classes: {classes_count}\t\t\t\t\t#")
+print(f"#########################################################################################")
+
+
 # Analisador Semantico
-semantic_analysis(environment)
+semantic_analysis()
