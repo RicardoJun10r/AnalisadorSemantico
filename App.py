@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # Alunos: Vítor Duarte e Ricardo Júnior
 
 # Lendo o arquivo no diretório do projeto, contendo o exemplo a ser analisado.
-PATH = 'dados2.txt'
+PATH = 'dados3.txt'
 
 try:    
     with open(PATH, 'r') as arquivo:
@@ -239,19 +239,20 @@ def semantic_analysis():
         errors_found = True
         semantic_errors_count += 1
 
-    # Verificar a ordem dos operadores no cabeçalho
+    # Verifica a ordem dos operadores 
     def check_header_order():
         expected_operators = ['Individuals', 'SubclassOf', 'EquivalentTo', 'DisjointClasses']
         found_operators = [op.strip() for op in file.split('\n') if op.strip().endswith(':')]
 
         for expected_op, found_op in zip(expected_operators, found_operators):
             if expected_op != found_op:
-                print_semantic_error(f"As declarações no cabeçalho estão fora de ordem. Esperado: {expected_op}, mas encontrado: {found_op}", "precedência_operadores")
+                print_semantic_error(f"As declarações estão fora de ordem. Esperado: {expected_op}, mas encontrado: {found_op}", "precedência_operadores")
 
-    # Verificar coerção incorreta e classificação incorreta de propriedades
+    # Verifica coerção incorreta e classificação incorreta de propriedades
     def check_properties():
         data_properties = set()
         object_properties = set()
+        overloaded_properties = set()
 
         for class_name, class_data in environment['classes'].items():
             properties = class_data.get('properties', [])
@@ -262,14 +263,19 @@ def semantic_analysis():
                         data_properties.add(property_name)
                     else:
                         object_properties.add(property_name)
+                    if properties.count(property_name) > 1:
+                        overloaded_properties.add(property_name)
 
         for property_name in data_properties:
             property_data = environment['relations'].get(property_name, {})
             if 'range' in property_data:
                 if not property_data['range'].startswith('xsd:'):
-                    print_semantic_error(f"A propriedade '{property_name}' é classificada como data property, mas é usada como object property", "sobrecarregamento_propriedades", 3)
+                    print_semantic_error(f"A propriedade '{property_name}' é classificada como data property, mas é usada como object property", "sobrecarregamento_propriedades")
                 elif property_data['range'] != 'xsd:string':
-                    print_semantic_error(f"O intervalo da propriedade '{property_name}' está definido como '{property_data['range']}', mas é usado como tipo 'xsd:string'", "coerção_incorreta", 3)
+                    print_semantic_error(f"O intervalo da propriedade '{property_name}' está definido como '{property_data['range']}', mas é usado como tipo 'xsd:string'", "coerção_incorreta")
+
+        for property_name in overloaded_properties:
+            print_semantic_error(f"A propriedade '{property_name}' está sobrecarregada", "sobrecarregamento_propriedades")
 
     check_header_order()
     check_properties()
@@ -278,7 +284,6 @@ def semantic_analysis():
         print("Análise semântica concluída: Sem erros encontrados.")
     else:
         print(f"Análise semântica concluída: Foram encontrados {semantic_errors_count} erro(s).")
-
 
 def obter_tipos_propriedade(class_name, property_name):
     property_types = set()  # Conjunto para armazenar os tipos de valores encontrados
@@ -291,7 +296,6 @@ def obter_tipos_propriedade(class_name, property_name):
         property_types.add('float')
 
     return property_types
-
 
 # Função principal
 current_class = None  # Variável para rastrear a classe atual
@@ -357,5 +361,6 @@ parser = yacc.yacc()
 parser.parse(file)
 
 print("Análise Semântica: ")
+
 # Analisador Semantico
 semantic_analysis()
