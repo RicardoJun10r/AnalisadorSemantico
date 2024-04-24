@@ -1,32 +1,39 @@
-Class: Animal
-    SubClassOf: hasPart some Organ and hasColor some (Red or Blue)
-    SubClassOf: hasPart some Organ and hasColor some (Red or (hasPart some Organ and hasColor some Blue))
-    SubClassOf: hasPart some Organ and hasColor some ((hasPart some Organ and hasColor some Red) or Blue)
+Individuals:
+  Individual: Person1
 
-Class: Measurement
-    SubClassOf: hasValue min 0 xsd:integer
-    SubClassOf: hasValue min 0 xsd:string
-    SubClassOf: hasValue min 0 PizzaTopping
+DisjointClasses:
+  Class: Animal
 
-Class: Person
-    SubClassOf: hasAge min 18
-    SubClassOf: hasAge exactly 21 xsd:integer
-    SubClassOf: hasAge min 18 xsd:integer
+SubclassOf:
+  Class: Mammal
+  Class: Bird
+  SubclassOf: Animal
+  SubclassOf: hasPart some Organ and hasColor some (Red or Blue)
+  Class: Reptile
+  SubclassOf: hasPart some Organ and hasColor some (Red or (hasPart some Organ and hasColor some Blue))
+  Class: Amphibian
 
-Individual: Bob
-    Types: Human
-    Facts: hasAge 25
+EquivalentTo:
+  Class: Fish
+  EquivalentTo: hasPart some Organ and hasColor some ((hasPart some Organ and hasColor some Red) or Blue)
 
-Relation: hasPart
-    Domain: Organ
-    Range: Part
+Relations:
+  Domain: hasPart
+  Range: Part
+  InverseOf: PartOf
 
-Relation: hasColor
-    Domain: Thing
-    Range: Color
-    InverseOf: colorOf
+  Domain: hasColor
+  Range: Color
+  InverseOf: colorOf
 
-Relation: or
-    Domain: Thing
-    Range: Thing
+  Domain: or
+  Range: Thing
 
+  Domain: hasValue
+  Range: xsd:string
+
+  Domain: hasAge
+  Range: xsd:integer
+
+Facts:
+  Person1: hasAge 25

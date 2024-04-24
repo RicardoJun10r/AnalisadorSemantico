@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # Alunos: Vítor Duarte e Ricardo Júnior
 
 # Lendo o arquivo no diretório do projeto, contendo o exemplo a ser analisado.
-PATH = 'dados5.txt'
+PATH = 'dados2.txt'
 
 try:    
     with open(PATH, 'r') as arquivo:
@@ -233,138 +233,77 @@ def semantic_analysis():
     semantic_errors_count = 0
 
     # Função para imprimir erros semânticos
-    def print_semantic_error(message):
+    def print_semantic_error(message, error_type):
         nonlocal errors_found, semantic_errors_count
-        print(f"Erro semântico: {message}")
+        print(f"Erro semântico ({error_type}): {message}")
         errors_found = True
         semantic_errors_count += 1
 
-    # Função para verificar sobrecarregamento de uma propriedade
-    def verifica_sobrecarregamento(property_name):
-        property_types = set()  # Conjunto para armazenar os tipos de valores encontrados
+    # Verificar a ordem dos operadores no cabeçalho
+    def check_header_order():
+        expected_operators = ['Individuals', 'SubclassOf', 'EquivalentTo', 'DisjointClasses']
+        found_operators = [op.strip() for op in file.split('\n') if op.strip().endswith(':')]
 
-        # Iterar sobre as classes para encontrar o uso da propriedade
+        for expected_op, found_op in zip(expected_operators, found_operators):
+            if expected_op != found_op:
+                print_semantic_error(f"As declarações no cabeçalho estão fora de ordem. Esperado: {expected_op}, mas encontrado: {found_op}", "precedência_operadores")
+
+    # Verificar coerção incorreta e classificação incorreta de propriedades
+    def check_properties():
+        data_properties = set()
+        object_properties = set()
+
         for class_name, class_data in environment['classes'].items():
             properties = class_data.get('properties', [])
-            if property_name in properties:
-                # Verificar o tipo de valor usado para esta propriedade nesta classe
-                property_types.update(obter_tipos_propriedade(class_name, property_name))
+            for property_name in properties:
+                property_data = environment['relations'].get(property_name, {})
+                if 'range' in property_data:
+                    if property_data['range'].startswith('xsd:'):
+                        data_properties.add(property_name)
+                    else:
+                        object_properties.add(property_name)
 
-        # Se houver mais de um tipo de valor encontrado, há sobrecarregamento
-        return len(property_types) > 1
+        for property_name in data_properties:
+            property_data = environment['relations'].get(property_name, {})
+            if 'range' in property_data:
+                if not property_data['range'].startswith('xsd:'):
+                    print_semantic_error(f"A propriedade '{property_name}' é classificada como data property, mas é usada como object property", "sobrecarregamento_propriedades", 3)
+                elif property_data['range'] != 'xsd:string':
+                    print_semantic_error(f"O intervalo da propriedade '{property_name}' está definido como '{property_data['range']}', mas é usado como tipo 'xsd:string'", "coerção_incorreta", 3)
 
-    # Função para obter tipos de valores para uma propriedade em uma classe específica
-    def obter_tipos_propriedade(class_name, property_name):
-        property_types = set()  # Conjunto para armazenar os tipos de valores encontrados
-
-        # Aqui você pode adicionar lógica específica do seu sistema para determinar o tipo de valor usado
-        # Exemplo básico: assumindo que o tipo de valor é baseado no nome da classe
-        if 'String' in class_name:
-            property_types.add('string')
-        elif 'Integer' in class_name:
-            property_types.add('integer')
-        elif 'Float' in class_name:
-            property_types.add('float')
-        # Adicione mais lógica conforme necessário para outros tipos de valores
-
-        return property_types
-
-    # Função para avaliar expressões de subclasse
-    def evaluate_subclass_expression(expression):
-        if isinstance(expression, str):
-            # A single class name
-            return expression in environment['classes']
-        elif isinstance(expression, tuple):
-            # A conjunction or disjunction of expressions
-            operator = expression[0]
-            operands = expression[1:]
-            if operator == 'and':
-                return all(evaluate_subclass_expression(operand) for operand in operands)
-            elif operator == 'or':
-                return any(evaluate_subclass_expression(operand) for operand in operands)
-        return False
-
-    # Analisar erros em classes
-    print("Analisando erros em 'classes':")
-    for class_name, class_data in environment['classes'].items():
-        # Verificar se a classe tem restrições
-        if 'subClassOf' in class_data:
-            for restriction in class_data['subClassOf']:
-                # Verificar se a restrição é uma expressão de subclasse válida
-                if not evaluate_subclass_expression(restriction):
-                    print_semantic_error(f"Expressão de subclasse inválida para a classe '{class_name}': {restriction}")
-
-    # Analisar erros em relations
-    print("Analisando erros em 'relations':")
-    for property_name, property_data in environment['relations'].items():
-        # Verificar se a propriedade tem restrições
-        if isinstance(property_data, list):
-            for restriction in property_data:
-                # Verificar se a restrição é uma tupla
-                if isinstance(restriction, tuple):
-                    # 1. Verificar precedência dos operadores
-                    if 'or' in restriction and 'and' in restriction:
-                        or_index = restriction.index('or')
-                        and_index = restriction.index('and')
-                        if or_index > and_index:
-                            print_semantic_error(f"Erro de precedência de operadores na propriedade '{property_name}'")
-
-                    # 2. Verificar coerção
-                    if restriction[0] in ['min', 'max', 'exactly']:
-                        # Verificar o tipo do valor da restrição
-                        if not isinstance(restriction[2], int):
-                            print_semantic_error(f"Valor '{restriction[2]}' na restrição da propriedade '{property_name}' não é do tipo esperado")
-
-                    # 3. Verificar sobrecarregamento
-                    if verifica_sobrecarregamento(property_name):
-                        print_semantic_error(f"Sobrecarregamento detectado para a propriedade '{property_name}'")
-
-                    # Verificar a validade da restrição
-                    if restriction[0] not in ['min', 'max', 'exactly']:
-                        print_semantic_error(f"Restrição inválida '{restriction[0]}' para a propriedade '{property_name}'")
-                    elif len(restriction) < 3:
-                        print_semantic_error(f"Faltam argumentos na restrição da propriedade '{property_name}'")
-                    elif not isinstance(restriction[2], int):
-                        print_semantic_error(f"Valor inválido '{restriction[2]}' na restrição da propriedade '{property_name}'")
-                    elif restriction[0] == 'exactly' and restriction[2] != 1:
-                        print_semantic_error(f"Restrição 'exactly' para a propriedade '{property_name}' deve ter o valor '1'")
-                # Verificar se a restrição é uma expressão de subclasse
-                elif isinstance(restriction, tuple):
-                    result = evaluate_subclass_expression(restriction)
-                    if not result:
-                        print_semantic_error(f"Expressão de subclasse inválida na propriedade '{property_name}': {restriction}")
-        else:
-            # A propriedade não possui restrições
-            print_semantic_error(f"A propriedade '{property_name}' não possui restrições definidas")
+    check_header_order()
+    check_properties()
 
     if not errors_found:
         print("Análise semântica concluída: Sem erros encontrados.")
     else:
-        print(f"Análise semântica concluída: Foram encontrados {semantic_errors_count} erros.")
+        print(f"Análise semântica concluída: Foram encontrados {semantic_errors_count} erro(s).")
 
-# Função para avaliar expressões de subclasse
-def evaluate_subclass_expression(expression):
-    if isinstance(expression, str):
-        # A single class name
-        return expression in environment['classes']
-    elif isinstance(expression, tuple):
-        # A conjunction or disjunction of expressions
-        operator = expression[0]
-        operands = expression[1:]
-        if operator == 'and':
-            return all(evaluate_subclass_expression(operand) for operand in operands)
-        elif operator == 'or':
-            return any(evaluate_subclass_expression(operand) for operand in operands)
-    return False
+
+def obter_tipos_propriedade(class_name, property_name):
+    property_types = set()  # Conjunto para armazenar os tipos de valores encontrados
+
+    if 'String' in class_name:
+        property_types.add('string')
+    elif 'Integer' in class_name:
+        property_types.add('integer')
+    elif 'Float' in class_name:
+        property_types.add('float')
+
+    return property_types
 
 
 # Função principal
 current_class = None  # Variável para rastrear a classe atual
+current_relation = None  # Variável para rastrear a relação atual
+current_individual = None  # Variável para rastrear o indivíduo atual
+
 while True:
     tok = lexer.token()
     if not tok:
         break
     found_tokens.append((tok.lineno, tok.type, tok.value))
+    
     if tok.type == 'PROPERTY':
         property_count += 1
         property_name = tok.value
@@ -374,6 +313,8 @@ while True:
         # Adiciona a propriedade à classe atual, se houver
         if current_class:
             environment['classes'][current_class]['properties'].append(property_name)
+        # Define a relação atual
+        current_relation = property_name
     elif tok.type == 'CLASS':
         classes_count += 1
         class_name = tok.value
@@ -384,7 +325,30 @@ while True:
             environment['classes'][class_name] = {'subClassOf': [], 'properties': []}
         # Define a classe atual para associar propriedades
         current_class = class_name
-
+    elif tok.type == 'RELATION':
+        # Define a relação atual
+        current_relation = tok.value
+    elif tok.type == 'INDIVIDUAL':
+        # Define o indivíduo atual
+        current_individual = tok.value
+        # Adiciona o indivíduo ao ambiente
+        if current_individual not in environment['individuals']:
+            environment['individuals'][current_individual] = {'subClassOf': [], 'properties': []}
+    elif tok.type == 'TYPES':
+        # Adiciona os tipos ao indivíduo atual
+        environment['individuals'][current_individual]['subClassOf'].append(tok.value)
+    elif tok.type == 'FACTS':
+        # Adiciona os fatos ao indivíduo atual
+        environment['individuals'][current_individual]['properties'].append(tok.value)
+    elif tok.type == 'DOMAIN':
+        # Define o domínio para a relação atual
+        environment['relations'][current_relation]['domain'] = tok.value
+    elif tok.type == 'RANGE':
+        # Define a faixa para a relação atual
+        environment['relations'][current_relation]['range'] = tok.value
+    elif tok.type == 'INVERSEOF':
+        # Define a inversa para a relação atual
+        environment['relations'][current_relation]['inverseOf'] = tok.value
 
 # Construção do analisador Sintático
 parser = yacc.yacc()
