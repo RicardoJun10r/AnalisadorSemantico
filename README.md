@@ -8,9 +8,9 @@ Disciplina: Compiladores
 
 Professor: Dr. Patricio de Alencar Silva
 
-Este é um analisador semâNTICO para a linguagem OWL (Web Ontology Language) implementado em Python usando a biblioteca PLY (Python Lex-Yacc). O código é projetado para analisar expressões OWL presentes em um arquivo de texto e fornecer um resumo estatístico.
+Este é um analisador semântico para a linguagem OWL (Web Ontology Language) implementado em Python usando a biblioteca PLY (Python Lex-Yacc). O código é projetado para analisar expressões OWL presentes em um arquivo de texto e fornecer um resumo estatístico.
 
-Os arquivos parser.out e parsetab.py são gerados com dados baseados no arquivo de teste (dados.txt ou dados2.txt) 
+Os arquivos parser.out e parsetab.py são gerados com dados baseados no arquivo de teste (dados.txt, dados2.txt, dados3.txt, dados4.txt ou dados5.txt) 
 
 * Instalação:
 
@@ -56,6 +56,12 @@ parsetab.py
 ```
 Em caso de mudança do arquivo teste, é necessário deletar os arquivos e rodar novamente a aplicação para que os mesmos sejam atualizados
 
-## Visualização do Resumo
-Além da saída dos dados via terminal, o código gera uma tabela resumo e a salva como uma imagem. A tabela é salva como "resumo_tabela.png" no diretório do projeto.
+ * Saída da análise semântica é mostrada no terminal ao rodar o arquivo App.py
 
+## Arquivos
+
+Foram criados 3 novos arquivos de teste (dados.txt e dados2.txt já foram utilizados previamente, ontologia da pizza e de Manoel)  
+
+Saída para precedência de operadores: 
+  * Arquivos corretos (não vão retornar erros): dados3.txt e dados4.txt   
+  * Arquivos incorretos (vão retornar erros): dados.txt, dados2.txt e dados5.txt,   
