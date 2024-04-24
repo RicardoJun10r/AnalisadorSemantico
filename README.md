@@ -56,6 +56,8 @@ parsetab.py
 ```
 Em caso de mudança do arquivo teste, é necessário deletar os arquivos e rodar novamente a aplicação para que os mesmos sejam atualizados
 
+ * Saída da análise semântica é mostrada no terminal ao rodar o arquivo App.py
+
 ## Arquivos
 
 Foram criados 3 novos arquivos de teste (dados.txt e dados2.txt já foram utilizados previamente, ontologia da pizza e de Manoel)  
