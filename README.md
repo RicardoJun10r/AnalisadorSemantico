@@ -32,6 +32,10 @@ https://github.com/RicardoJun10r/AnalisadorSemantico
 
 Se você estiver usando o VSCode, pode abrir o diretório do projeto diretamente. Certifique-se de ter a extensão do Python instalada. Abra o terminal integrado no VSCode e instale as dependências necessárias, caso ainda não tenha feito.
 
+## Arquivos
+
+Foram criados 3 novos arquivos de teste (dados.txt e dados2.txt já foram utilizados previamente, ontologia da pizza e de Manoel)  
+
 ## Execução
 
 Basta executar o seguinte comando: 
@@ -58,10 +62,9 @@ Em caso de mudança do arquivo teste, é necessário deletar os arquivos e rodar
 
  * Saída da análise semântica é mostrada no terminal ao rodar o arquivo App.py
 
-## Arquivos
-
-Foram criados 3 novos arquivos de teste (dados.txt e dados2.txt já foram utilizados previamente, ontologia da pizza e de Manoel)  
-
 Saída para precedência de operadores: 
   * Arquivos corretos (não vão retornar erros): dados3.txt e dados4.txt   
   * Arquivos incorretos (vão retornar erros): dados.txt, dados2.txt e dados5.txt,   
+
+Saída para coerção e sobrecarregamento: 
+  * Conseguimos a lógica no código, mas mesmo com um arquivo errado ele não exibe na saída   
